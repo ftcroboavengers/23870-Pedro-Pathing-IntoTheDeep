@@ -23,15 +23,20 @@ import org.firstinspires.ftc.teamcode.pedroPathing.util.KalmanFilterParameters;
 public class FollowerConstants {
 
     // This section is for configuring your motors
-    public static String leftFrontMotorName = "leftFront";
-    public static String leftRearMotorName = "leftRear";
-    public static String rightFrontMotorName = "rightFront";
-    public static String rightRearMotorName = "rightRear";
+    // [RAC] changed motor names as per our usage
+    public static String leftFrontMotorName = "frontLeftMotor";
+    public static String leftRearMotorName = "backLeftMotor";
+    public static String rightFrontMotorName = "frontRightMotor";
+    public static String rightRearMotorName = "backRightMotor";
 
     // This section is for setting the actual drive vector for the front left wheel, if the robot
     // is facing a heading of 0 radians with the wheel centered at (0,0)
-    private static double xMovement = 81.34056;
-    private static double yMovement = 65.43028;
+    // [RAC] Updated based on average of 5 trial runs
+    // private static double xMovement = 81.34056;
+    private static double xMovement = 64.88338;
+    // [RAC] Updated based on average of 5 trial runs
+    //private static double yMovement = 65.43028;
+    private static double yMovement = 54.30872;
     private static double[] convertToPolar = Point.cartesianToPolar(xMovement, -yMovement);
     public static Vector frontLeftVector = MathFunctions.normalizeVector(new Vector(convertToPolar[0], convertToPolar[1]));
 
@@ -83,19 +88,25 @@ public class FollowerConstants {
 
 
     // Mass of robot in kilograms
-    public static double mass = 10.65942;
+    // [RAC] changed mass of the preset amount to fit our robot requirements
+    //public static double mass = 10.65942;
+    public static double mass = 11.3398;
 
     // Centripetal force to power scaling
-    public static double centripetalScaling = 0.0005;
+    public static double centripetalScaling = 0.00035;
 
 
     // Acceleration of the drivetrain when power is cut in inches/second^2 (should be negative)
     // if not negative, then the robot thinks that its going to go faster under 0 power
-    public static double forwardZeroPowerAcceleration = -34.62719;
+    // [RAC] changed with avg of 5 readings
+    // public static double forwardZeroPowerAcceleration = -34.62719;
+    public static double forwardZeroPowerAcceleration = -30.42223;
 
     // Acceleration of the drivetrain when power is cut in inches/second^2 (should be negative)
     // if not negative, then the robot thinks that its going to go faster under 0 power
-    public static double lateralZeroPowerAcceleration = -78.15554;
+    //public static double lateralZeroPowerAcceleration = -78.15554;
+    // [RAC] changed with avg of 5 readings
+    public static double lateralZeroPowerAcceleration = -58.14630;
 
     // A multiplier for the zero power acceleration to change the speed the robot decelerates at
     // the end of paths.
@@ -104,7 +115,7 @@ public class FollowerConstants {
     // Decreasing this will cause the deceleration at the end of the Path to be slower, making the
     // robot slower but reducing risk of end-of-path overshoots or localization slippage.
     // This can be set individually for each Path, but this is the default.
-    public static double zeroPowerAccelerationMultiplier = 4;
+    public static double zeroPowerAccelerationMultiplier = 3.75;
 
 
     // When the robot is at the end of its current Path or PathChain and the velocity goes below

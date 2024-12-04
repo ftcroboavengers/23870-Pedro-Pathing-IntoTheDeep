@@ -59,10 +59,16 @@ public class TwoWheelLocalizer extends Localizer { // todo: make two wheel odo w
     private double previousIMUOrientation;
     private double deltaRadians;
     private double totalHeading;
-    public static double FORWARD_TICKS_TO_INCHES = 8192 * 1.37795 * 2 * Math.PI * 0.5008239963;
-    public static double STRAFE_TICKS_TO_INCHES = 8192 * 1.37795 * 2 * Math.PI * 0.5018874659;
-    //505.31694431
-    //505.31694431676769106620594870773
+    //[RAC] deadwheel encoder names changed
+    //public static double FORWARD_TICKS_TO_INCHES = 8192 * 1.37795 * 2 * Math.PI * 0.5008239963;
+    //public static double STRAFE_TICKS_TO_INCHES = 8192 * 1.37795 * 2 * Math.PI * 0.5018874659;
+    public static double FORWARD_TICKS_TO_INCHES = 0.002; //0.00197895600226128707934654701309
+    public static double STRAFE_TICKS_TO_INCHES = 0.002;
+
+    //Number of ticks per inch for the goBilda 32mm diameter dead wheel
+    //Circumference of wheel = 2*pi*16/25.4= 3.9579120045225741586930940261789 in
+    //goBilda deadwheel has 2000 ticks per revolution. So ticks per inch is 505.31694431676769106620594870773
+    // inch travel per tick is 3.9579120045225741586930940261789/2000 = 0.00197895600226128707934654701309
 
     /**
      * This creates a new TwoWheelLocalizer from a HardwareMap, with a starting Pose at (0,0)
@@ -96,18 +102,23 @@ public class TwoWheelLocalizer extends Localizer { // todo: make two wheel odo w
         // TODO: replace this with your IMU's orientation
 
         //[RAC] imu position changed
+        //refer image Orthogonal #1 & #8 https://ftc-docs.firstinspires.org/en/latest/programming_resources/imu/imu.html
         //imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.UP, RevHubOrientationOnRobot.UsbFacingDirection.LEFT)));
         imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.UP, RevHubOrientationOnRobot.UsbFacingDirection.RIGHT)));
         // TODO: replace these with your encoder ports
-        //[RAC] imu position changed
+        //[RAC] deadwheel encoder names changed
         // forwardEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, "leftRear"));
         // strafeEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, "strafeEncoder"));
         forwardEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, "xdeadwheel"));
         strafeEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, "ydeadwheel"));
 
         // TODO: reverse any encoders necessary
-        forwardEncoder.setDirection(Encoder.REVERSE);
-        strafeEncoder.setDirection(Encoder.FORWARD);
+        //[RAC] Changed to Forward for encoder to tick up when the robot moves forward
+        //forwardEncoder.setDirection(Encoder.REVERSE);
+        //strafeEncoder.setDirection(Encoder.FORWARD);
+        forwardEncoder.setDirection(Encoder.FORWARD);
+        //[RAC] After discussion with PedroPathing team we found out that Strafe left is positive.
+        strafeEncoder.setDirection(Encoder.REVERSE);
 
         setStartPose(setStartPose);
         timer = new NanoTimer();
