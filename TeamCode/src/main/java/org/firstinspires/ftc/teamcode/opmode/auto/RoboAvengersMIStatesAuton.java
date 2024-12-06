@@ -1,5 +1,10 @@
 package org.firstinspires.ftc.teamcode.opmode.auto;
 
+import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftFrontMotorName;
+import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftRearMotorName;
+import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightFrontMotorName;
+import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightRearMotorName;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -31,12 +36,11 @@ public class RoboAvengersMIStatesAuton extends OpMode
 
     final double ARM_TICKS_PER_DEGREE = 28 * 250047.0 / 4913.0 * 100.0 / 20.0 * 1/360.0;
     final double ARM_COLLAPSED_INTO_ROBOT  = 0;
-    final double ARM_CLEAR_BARRIER         = 25 * ARM_TICKS_PER_DEGREE;
     final double ARM_SCORE_HIGH_BASKET     = 100 * ARM_TICKS_PER_DEGREE;
     final double SLIDER_TICKS_PER_MM = 537.7 / 120.0;
     final double SLIDER_SCORING_IN_HIGH_BASKET = 475 * SLIDER_TICKS_PER_MM;
-    final double SLIDER_SAMPLE1_PICKUP = 205 * SLIDER_TICKS_PER_MM;
-    final double SLIDER_SAMPLE1_SCORE = 205 * SLIDER_TICKS_PER_MM;
+    final double SLIDER_SAMPLE1_PICKUP = 260 * SLIDER_TICKS_PER_MM;
+    final double SLIDER_SAMPLE1_SCORE = 270 * SLIDER_TICKS_PER_MM;
     final double SLIDER_BACK2_ZERO = 475 * SLIDER_TICKS_PER_MM;
     final double CLAW_CLOSED = 0.0;
     final double CLAW_OPEN   = 1.0;
@@ -63,7 +67,7 @@ public class RoboAvengersMIStatesAuton extends OpMode
     private final Pose safeParkPose = new Pose (24, 96, Math.toRadians(90));
 
     // Pickup pose of our robot to collect the first sample (right)
-    private final Pose pickSample1Pose = new Pose (24,112, Math.toRadians(45));
+    private final Pose pickSample1Pose = new Pose (24,112, Math.toRadians(30));
 
     // Back away from bucket after scorePose2
     private final Pose scorePose2 = new Pose (12, 132, Math.toRadians(135));
@@ -80,8 +84,8 @@ public class RoboAvengersMIStatesAuton extends OpMode
 
         // Initiate drive motors
         follower = new Follower(hardwareMap);
-        follower.setMaxPower(0.7);
         follower.setStartingPose(startPose);
+        follower.setMaxPower(0.5);
 
         // Initiate arm motor and claw servo
         armMotor        = hardwareMap.dcMotor.get("left_arm");
@@ -108,19 +112,26 @@ public class RoboAvengersMIStatesAuton extends OpMode
     @Override
     public void loop()
     {
-        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-        // These loop the movements of the robot
-        follower.update();
-        autonomousPathUpdate();
+        if(pathState == -1)
+        {
+            requestOpModeStop();
+        }
+        else
+        {
+            telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+            // These loop the movements of the robot
+            follower.update();
+            autonomousPathUpdate();
 
-        // Feedback to Driver Hub
-        telemetry.addData("Path state: ", pathState);
-        telemetry.addData("x: ", follower.getPose().getX());
-        telemetry.addData("y: ", follower.getPose().getY());
-        telemetry.addData("heading: ", follower.getPose().getHeading());
-        telemetry.addData("Arm Position: ", armMotor.getCurrentPosition());
-        telemetry.addData("Slider Position: ", sliderMotor.getCurrentPosition());
-        telemetry.update();
+            // Feedback to Driver Hub
+            telemetry.addData("Path state: ", pathState);
+            telemetry.addData("x: ", follower.getPose().getX());
+            telemetry.addData("y: ", follower.getPose().getY());
+            telemetry.addData("heading: ", follower.getPose().getHeading());
+            telemetry.addData("Arm Position: ", armMotor.getCurrentPosition());
+            telemetry.addData("Slider Position: ", sliderMotor.getCurrentPosition());
+            telemetry.update();
+        }
     }
     
     /** This method is called continuously after Init while waiting for "play". **/
@@ -140,7 +151,11 @@ public class RoboAvengersMIStatesAuton extends OpMode
     {
         armMotor.setPower(0);
         sliderMotor.setPower(0);
-        follower.setMaxPower(0);
+        hardwareMap.get(DcMotorEx.class, leftFrontMotorName).setPower(0);
+        hardwareMap.get(DcMotorEx.class, leftRearMotorName).setPower(0);
+        hardwareMap.get(DcMotorEx.class, rightRearMotorName).setPower(0);
+        hardwareMap.get(DcMotorEx.class, rightFrontMotorName).setPower(0);
+        follower = null;
     }
 
     /** This builds the path required for our robot to move and collect samples **/
@@ -174,8 +189,8 @@ public class RoboAvengersMIStatesAuton extends OpMode
             switch (pathState)
             {
                 case 0:
-                    actionTimer.resetTimer();
                     claw.setPosition(CLAW_CLOSED);
+                    actionTimer.resetTimer();
                     while (actionTimer.getElapsedTime() < 500)
                     {
                         telemetry.addData("Case 0: Claw close: ", "Complete");
@@ -208,7 +223,7 @@ public class RoboAvengersMIStatesAuton extends OpMode
                     break;
 
                 case 2:
-                    if( armMotor.getCurrentPosition() >= (int)ARM_SCORE_HIGH_BASKET || armMotor.getCurrentPosition() <= (int) ARM_SCORE_HIGH_BASKET - 2 )
+                    if( armMotor.getCurrentPosition() >= (int)ARM_SCORE_HIGH_BASKET )
                     {
                         //this holds the robot in position
                         follower.followPath(scorePreload, true);
@@ -222,15 +237,17 @@ public class RoboAvengersMIStatesAuton extends OpMode
 
                 case 3:
                     // Step 4 Sample drop in top basket
-                    if(follower.isBusy() == false && follower.getPose().getX() > (scorePose1.getX() - 1.0) && follower.getPose().getY() > (scorePose1.getY() - 1.0))
+                    if( follower.isBusy() || ( follower.getPose().getX() > (scorePose1.getX() - 1.0)
+                            && follower.getPose().getY() > (scorePose1.getY() - 1.0)))
                     {
                         follower.holdPoint(scorePose1);
-                        actionTimer.resetTimer();
+
                         clawHead.setPosition(0.7);
                         telemetry.addData("Case 3A: Claw 0.7 rotate: ", "Complete ");
                         telemetry.update();
-                        claw.setPosition(CLAW_OPEN); //[TBT] Moved outside the while loop
+                        claw.setPosition(CLAW_OPEN);
 
+                        actionTimer.resetTimer();
                         while (actionTimer.getElapsedTime() < 500) //increase it to 500 if needed
                         {
                             telemetry.addData("Case 3B: Preload Sample drop: ", "Complete");
@@ -241,8 +258,7 @@ public class RoboAvengersMIStatesAuton extends OpMode
 
                 case 4:
                     // Step 5 Strafe backwards to sample 1 pickup
-                    //this holds the robot in position
-                    follower.followPath(pickSample1Path, true);
+                    follower.followPath(pickSample1Path, true); //this holds the robot in position
                     telemetry.addData("Case 4: Robot strafe to sample 1 pickup: ", "Complete");
                     telemetry.addData("Case 4: Robot current x position", follower.getPose().getX());
                     telemetry.addData("Case 4: Robot current y position", follower.getPose().getY());
@@ -252,11 +268,13 @@ public class RoboAvengersMIStatesAuton extends OpMode
 
                 case 5:
                     //Step 5 Retract arm for sample 1 collection
-                    if(follower.isBusy() == false && follower.getPose().getX() < (pickSample1Pose.getX() + 1.0) && follower.getPose().getY() < (pickSample1Pose.getY() + 1.0))
+                    if(follower.isBusy() || (follower.getPose().getX() > (pickSample1Pose.getX() - 1.0)
+                            && follower.getPose().getY() < (pickSample1Pose.getY() + 1.0)))
                     {
                         follower.holdPoint(pickSample1Pose);
-                        actionTimer.resetTimer();
                         clawHead.setPosition(0.25);
+
+                        actionTimer.resetTimer();
                         while (actionTimer.getElapsedTime() < 250)
                         {
                             telemetry.addData("Case 5: Claw head rotated 0.25", "completed");
@@ -267,10 +285,10 @@ public class RoboAvengersMIStatesAuton extends OpMode
                         sliderMotor.setDirection(DcMotorSimple.Direction.FORWARD);
                         sliderMotor.setTargetPosition((int)SLIDER_SAMPLE1_PICKUP);
                         sliderMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                        sliderMotor.setPower(0.3);
+                        sliderMotor.setPower(0.6);
 
                         actionTimer.resetTimer();
-                        while ( sliderMotor.isBusy() || actionTimer.getElapsedTime() < 2000 )
+                        while ( sliderMotor.isBusy() || actionTimer.getElapsedTime() < 500 )
                         {
                             telemetry.addData("Case 5A: Robot slider sample 1 position", "InProgress");
                             telemetry.update();
@@ -281,7 +299,7 @@ public class RoboAvengersMIStatesAuton extends OpMode
                         armMotor.setPower(0.6);
 
                         actionTimer.resetTimer();
-                        while ( armMotor.isBusy() || actionTimer.getElapsedTime() < 2000 )
+                        while ( armMotor.isBusy() || actionTimer.getElapsedTime() < 500 )
                         {
                             telemetry.addData("Case 5B: Robot arm sample1 pickup position", "InProgress");
                             telemetry.update();
@@ -292,8 +310,9 @@ public class RoboAvengersMIStatesAuton extends OpMode
 
                 case 6:
                     telemetry.addData("Case 6: Robot sample1 arm and slider pickup: ", "Complete");
-                    actionTimer.resetTimer();
+
                     claw.setPosition(CLAW_CLOSED);
+                    actionTimer.resetTimer();
                     while (actionTimer.getElapsedTime() < 500)
                     {
                         telemetry.addData("Case 6: Claw close: ", "complete");
@@ -313,7 +332,8 @@ public class RoboAvengersMIStatesAuton extends OpMode
                     sliderMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     sliderMotor.setPower(0.6);
 
-                    while ( armMotor.isBusy() || sliderMotor.isBusy() || actionTimer.getElapsedTime() < 2000 )
+                    actionTimer.resetTimer();
+                    while ( armMotor.isBusy() || sliderMotor.isBusy() || actionTimer.getElapsedTime() < 1000 )
                     {
                         telemetry.addData("Case 7: Robot arm ready for sample1 basket drop: ", "Complete");
                         telemetry.update();
@@ -323,7 +343,7 @@ public class RoboAvengersMIStatesAuton extends OpMode
 
                 case 8:
                     //Step 6 Go to sample 1 position
-                    if( armMotor.getCurrentPosition() >= (int)ARM_SCORE_HIGH_BASKET || armMotor.getCurrentPosition() <= (int) ARM_SCORE_HIGH_BASKET - 2 )
+                    if( armMotor.getCurrentPosition() >= (int)SLIDER_SAMPLE1_SCORE )
                     {
                         follower.followPath(scoreSample1path, true);
                         telemetry.addData("Case 8: Robot sample 1 drop position: ", "Complete");
@@ -334,16 +354,16 @@ public class RoboAvengersMIStatesAuton extends OpMode
                     }
                     break;
                 case 9:
-                    // Step 4 Sample drop in top basket
-                    if(follower.isBusy() == false && follower.getPose().getX() > (scorePose2.getX() - 1.0) && follower.getPose().getY() > (scorePose2.getY() - 1.0))
+                    // Sample 1 drop in top basket
+                    if( follower.getPose().getX() > (scorePose2.getX() - 1.0) && follower.getPose().getY() > (scorePose2.getY() - 1.0))
                     {
                         follower.holdPoint(scorePose2);
-                        actionTimer.resetTimer();
-                        clawHead.setPosition(0.7);
-                        telemetry.addData("Case 9A: Claw 0.7 rotate: ", "Complete");
-                        telemetry.update();
-                        claw.setPosition(CLAW_OPEN); //[TBT] Moved outside the while loop
 
+                        clawHead.setPosition(0.4);
+                        telemetry.addData("Case 9A: Claw 0.4 rotate: ", "Complete");
+                        telemetry.update();
+                        claw.setPosition(CLAW_OPEN);
+                        actionTimer.resetTimer();
                         while (actionTimer.getElapsedTime() < 500) //increase it to 500 if needed
                         {
                             telemetry.addData("Case 9B: Sample dropped: ", "Complete");
@@ -353,6 +373,7 @@ public class RoboAvengersMIStatesAuton extends OpMode
                     break;
 
                 case 10:
+                    follower.setMaxPower(0.7);
                     follower.followPath(safeParkPath, true);
                     telemetry.addData("Case 10: Robot safe park position: ", "Complete");
                     telemetry.addData("Case 10: Robot safe park x position", follower.getPose().getX());
@@ -362,41 +383,41 @@ public class RoboAvengersMIStatesAuton extends OpMode
                     break;
 
                 case 11:
-                if(follower.isBusy() == false && follower.getPose().getX() < (safeParkPose.getX() + 1.0) && follower.getPose().getY() < (pickSample1Pose.getY() + 1.0))
-                {
-                    follower.holdPoint(safeParkPose);
-                    actionTimer.resetTimer();
-                    clawHead.setPosition(0.4);
-                    claw.setPosition(CLAW_CLOSED);
-                    telemetry.addData("Case 11: Claw head rotate 0.4", "Complete");
-                    telemetry.update();
+                    if( follower.getPose().getX() > (safeParkPose.getX() - 1.0)
+                            && follower.getPose().getY() < (pickSample1Pose.getY() + 1.0))
 
-                    sliderMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    sliderMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-                    sliderMotor.setTargetPosition((int)SLIDER_BACK2_ZERO);
-                    sliderMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    sliderMotor.setPower(0.6);
-
-                    actionTimer.resetTimer();
-                    while ( sliderMotor.isBusy() || actionTimer.getElapsedTime() < 500 )
                     {
-                        telemetry.addData("Case 11A: Robot slider park position", "InProgress");
-                        telemetry.update();
-                    }
+                        follower.holdPoint(safeParkPose);
 
-                    armMotor.setTargetPosition((int) ARM_COLLAPSED_INTO_ROBOT);
-                    armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    armMotor.setPower(0.6);
-
-                    actionTimer.resetTimer();
-                    while ( armMotor.isBusy() || actionTimer.getElapsedTime() < 500 )
-                    {
-                        telemetry.addData("Case 11B: Robot slider park position", "InProgress");
+                        clawHead.setPosition(0.4);
+                        claw.setPosition(CLAW_CLOSED);
+                        telemetry.addData("Case 11: Claw head rotate 0.4", "Complete");
                         telemetry.update();
+
+                        sliderMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                        sliderMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+                        sliderMotor.setTargetPosition((int) SLIDER_BACK2_ZERO);
+                        sliderMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                        sliderMotor.setPower(0.6);
+
+                        actionTimer.resetTimer();
+                        while (sliderMotor.isBusy() || actionTimer.getElapsedTime() < 500) {
+                            telemetry.addData("Case 11A: Robot slider park position", "InProgress");
+                            telemetry.update();
+                        }
+
+                        armMotor.setTargetPosition((int) ARM_COLLAPSED_INTO_ROBOT);
+                        armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                        armMotor.setPower(0.6);
+
+                        actionTimer.resetTimer();
+                        while (armMotor.isBusy() || actionTimer.getElapsedTime() < 100) {
+                            telemetry.addData("Case 11B: Robot slider park position", "InProgress");
+                            telemetry.update();
+                        }
+                        setPathState(-1);
                     }
-                    setPathState(-1);
-                }
-                break;
+                    break;
             }
         }
     }
