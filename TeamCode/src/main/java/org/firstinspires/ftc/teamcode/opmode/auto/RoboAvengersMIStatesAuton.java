@@ -34,10 +34,10 @@ public class RoboAvengersMIStatesAuton extends OpMode
     final double ARM_CLEAR_BARRIER         = 25 * ARM_TICKS_PER_DEGREE;
     final double ARM_SCORE_HIGH_BASKET     = 100 * ARM_TICKS_PER_DEGREE;
     final double SLIDER_TICKS_PER_MM = 537.7 / 120.0;
-    final double SLIDER_SCORING_IN_HIGH_BASKET = 465 * SLIDER_TICKS_PER_MM;
-    final double SLIDER_SAMPLE1_PICKUP = 200 * SLIDER_TICKS_PER_MM;
-    final double SLIDER_SAMPLE1_SCORE = 200 * SLIDER_TICKS_PER_MM;
-    final double SLIDER_BACK2_ZERO = 465 * SLIDER_TICKS_PER_MM;
+    final double SLIDER_SCORING_IN_HIGH_BASKET = 475 * SLIDER_TICKS_PER_MM;
+    final double SLIDER_SAMPLE1_PICKUP = 205 * SLIDER_TICKS_PER_MM;
+    final double SLIDER_SAMPLE1_SCORE = 205 * SLIDER_TICKS_PER_MM;
+    final double SLIDER_BACK2_ZERO = 475 * SLIDER_TICKS_PER_MM;
     final double CLAW_CLOSED = 0.0;
     final double CLAW_OPEN   = 1.0;
 
@@ -138,6 +138,9 @@ public class RoboAvengersMIStatesAuton extends OpMode
     @Override
     public void stop()
     {
+        armMotor.setPower(0);
+        sliderMotor.setPower(0);
+        follower.setMaxPower(0);
     }
 
     /** This builds the path required for our robot to move and collect samples **/
@@ -391,7 +394,7 @@ public class RoboAvengersMIStatesAuton extends OpMode
                         telemetry.addData("Case 11B: Robot slider park position", "InProgress");
                         telemetry.update();
                     }
-                    setPathState(12);
+                    setPathState(-1);
                 }
                 break;
             }
