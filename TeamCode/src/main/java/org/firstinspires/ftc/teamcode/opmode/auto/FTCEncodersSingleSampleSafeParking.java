@@ -38,7 +38,6 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import java.lang.Math;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
@@ -61,9 +60,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@Autonomous(name="Sample Obs Parking Auton", group="Robot")
+@Autonomous(name="Sample Safe Parking Auton", group="Robot")
 //@Disabled
-public class FTCEncodersSingleSampleObsParking extends LinearOpMode
+public class FTCEncodersSingleSampleSafeParking extends LinearOpMode
 {
     /* Declare OpMode members. */
     public DcMotor  leftFrontDrive   = null; //the left front drivetrain motor
@@ -98,7 +97,7 @@ public class FTCEncodersSingleSampleObsParking extends LinearOpMode
     final double WheelTurnsFromBasket = 584.2/circumference;
     final int EncoderCountFromBasket = (int)(WheelTurnsFromBasket * 537.7);
     
-        final double WheelTurnsFromBasket2 = 2336.8/circumference;
+    final double WheelTurnsFromBasket2 = 914.4/circumference;
     final int EncoderCountFromBasket2 = (int)(WheelTurnsFromBasket2 * 537.7);
 
     /* Variables that are used to set the arm to a specific position */

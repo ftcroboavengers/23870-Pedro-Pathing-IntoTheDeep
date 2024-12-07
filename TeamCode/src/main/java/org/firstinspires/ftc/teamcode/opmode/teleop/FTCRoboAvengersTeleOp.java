@@ -79,6 +79,7 @@ public class FTCRoboAvengersTeleOp extends LinearOpMode
     final double ARM_COLLAPSED_INTO_ROBOT  = 0;
     final double ARM_COLLECT               = 10 * ARM_TICKS_PER_DEGREE;
     final double ARM_CLEAR_BARRIER         = 15 * ARM_TICKS_PER_DEGREE;
+    final double SPECIMEN_PICKUP           = 40 * ARM_TICKS_PER_DEGREE;
     //[RA] Changed the angle from 76 to 70
     final double ARM_SCORE_SPECIMEN        = 70 * ARM_TICKS_PER_DEGREE;
     //[RA] Changed the angle from 90 to 80
@@ -246,6 +247,15 @@ public class FTCRoboAvengersTeleOp extends LinearOpMode
                 armPosition = ARM_SCORE_SAMPLE_IN_LOW;
                 //liftPosition = LIFT_SCORING_IN_HIGH_BASKET;
             }
+
+            else if (gamepad1.y)
+            {
+                /* This is about 20° up from the collecting position to clear the barrier
+                    Note here that we don't set the claw position or the intake power when we
+                    select this "mode", this means that the intake and claw will continue what
+                    they were doing before we clicked left bumper. */
+                armPosition = SPECIMEN_PICKUP;
+            }
             else if (gamepad1.dpad_left)
             {
                 /* This turns off the intake, folds in the claw, and moves the arm
@@ -360,15 +370,15 @@ like our arm. Where we click a button and it goes to a position, then stops.
             }
             else if (gamepad2.dpad_left)
             {
-                clawHead.setPosition(0.25);
+                clawHead.setPosition(0.42);
             }
             else if (gamepad2.dpad_right)
             {
-                clawHead.setPosition(0.6);
+                clawHead.setPosition(0.84);
             }
             else if (gamepad2.dpad_up)
             {
-                clawHead.setPosition(0.4);
+                clawHead.setPosition(0.64);
             }
             /*here we check to see if the lift is trying to go higher than the maximum extension.
              *if it is, we set the variable to the max.
